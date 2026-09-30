@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historial Médico - Cabeza de Algodón</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body {
+            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)), 
+                        url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover; min-height: 100vh; padding: 30px 20px; display: flex; justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); width: 100%; max-width: 1100px;
+            border-radius: 16px; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { color: #0f172a; }
+        .btn { background-color: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-sec { background-color: #64748b; }
+        .btn-sec:hover { background-color: #475569; }
+        
+        .form-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-top: 15px; }
+        .full-width { grid-column: 1 / -1; }
+        
+        input, select, textarea { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: white; font-family: inherit; }
+        textarea { resize: vertical; min-height: 60px; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; font-size: 13px; }
+        th { background-color: #0f172a; color: white; }
+
+        .toast {
+            display: none; position: fixed; top: 20px; right: 20px;
+            background-color: #10b981; color: white; padding: 14px 24px;
+            border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            font-weight: 600; z-index: 1000; animation: fadeIn 0.3s ease;
+        }
+        .toast.error { background-color: #ef4444; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Historial Médico</h1>
+            <a href="inicio.html" class="btn btn-sec">← Volver al Menú</a>
+        </div>
+
+        <div class="form-card">
+            <h3>Agregar Nueva Ficha Médica al Historial</h3>
+            <form id="formHistorial">
+                <div class="form-grid">
+                    <div>
+                        <label>Paciente:</label>
+                        <select id="id_paciente" required></select>
+                    </div>
+                    <div>
+                        <label>Fecha de Consulta / Visita:</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+                    <div>
+                        <label>Médico Tratante:</label>
+                        <input type="text" id="medico_tratante" placeholder="Ej. Dr. Carlos Gómez" required>
+                    </div>
+                    <div>
+                        <label>Especialidad del Médico:</label>
+                        <input type="text" id="especialidad_medico" placeholder="Ej. Geriatría / Cardiología" required>
+                    </div>
+
+                    <div class="full-width">
+                        <label>Motivo de Visita:</label>
+                        <input type="text" id="motivo_visita" placeholder="Ej. Control de hipertensión, dolor articular" required>
+                    </div>
+
+                    <div>
+                        <label>Exámenes Realizados:</label>
+                        <input type="text" id="examenes_laboratorio" placeholder="Ej. Perfil lipídico, Glucosa">
+                    </div>
+                    <div>
+                        <label>Resultados de Exámenes:</label>
+                        <input type="text" id="resultados_examenes" placeholder="Ej. Glucosa: 110 mg/dL (Normal)">
+                    </div>
+
+                    <div class="full-width">
+                        <label>Diagnóstico Médico:</label>
+                        <textarea id="diagnostico" required placeholder="Descripción del diagnóstico clínico..."></textarea>
+                    </div>
+
+                    <div>
+                        <label>Medicamento Aplicado:</label>
+                        <input type="text" id="medicamento_aplicado" placeholder="Ej. Losartán">
+                    </div>
+                    <div>
+                        <label>Cantidad / Dosis:</label>
+                        <input type="text" id="cantidad_medicamento" placeholder="Ej. 50mg, 1 tableta">
+                    </div>
+                    <div>
+                        <label>Tiempo / Frecuencia de Aplicación:</label>
+                        <input type="text" id="tiempo_aplicacion" placeholder="Ej. Cada 12 horas por 7 días">
+                    </div>
+
+                    <div class="full-width">
+                        <label>Observaciones Médicas:</label>
+                        <textarea id="observaciones" placeholder="Recomendaciones adicionales, reposo..."></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 15px;">Guardar Ficha en Historial</button>
+            </form>
+        </div>
+
+        <h3>Entradas Registradas (Historial Completo)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Paciente</th>
+                    <th>Médico (Especialidad)</th>
+                    <th>Motivo</th>
+                    <th>Diagnóstico</th>
+                    <th>Medicamento / Tratamiento</th>
+                    <th>Observaciones</th>
+                </tr>
+            </thead>
+            <tbody id="tablaHistorial"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('fecha').valueAsDate = new Date();
+            cargarPacientes();
+            cargarHistorial();
+        });
+
+        function mostrarToast(mensaje, esError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.className = esError ? 'toast error' : 'toast';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+
+        async function cargarPacientes() {
+            try {
+                const res = await fetch('http://localhost:3000/api/pacientes');
+                const pacientes = await res.json();
+                const select = document.getElementById('id_paciente');
+                select.innerHTML = '<option value="">Seleccione un paciente...</option>';
+                if (Array.isArray(pacientes)) {
+                    pacientes.forEach(p => {
+                        select.innerHTML += `<option value="${p.id_paciente}">${p.nombre}</option>`;
+                    });
+                }
+            } catch (err) {
+                console.error("Error al cargar pacientes:", err);
+            }
+        }
+
+ async function cargarHistorial() {
+    try {
+        const res = await fetch('http://localhost:3000/api/historial');
+        const historial = await res.json();
+        const tbody = document.getElementById('tablaHistorial');
+        tbody.innerHTML = '';
+
+        if (Array.isArray(historial)) {
+            historial.forEach(h => {
+                const fechaFormateada = new Date(h.fecha).toLocaleDateString('es-GT');
+                
+                // Construimos el texto del medicamento/tratamiento aparte para evitar errores de comillas
+                let medTexto = 'N/A';
+                if (h.medicamento_aplicado) {
+                    const cant = h.cantidad_medicamento ? ` (${h.cantidad_medicamento})` : '';
+                    const tiempo = h.tiempo_aplicacion ? `<br><small>${h.tiempo_aplicacion}</small>` : '';
+                    medTexto = `<b>${h.medicamento_aplicado}</b>${cant}${tiempo}`;
+                } else if (h.tratamiento) {
+                    medTexto = h.tratamiento;
+                }
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td>${h.id_historial}</td>
+                        <td>${fechaFormateada}</td>
+                        <td><b>${h.nombre_paciente}</b></td>
+                        <td>${h.medico_tratante || 'N/A'}<br><small style="color:#64748b;">${h.especialidad_medico || ''}</small></td>
+                        <td>${h.motivo_visita || 'N/A'}</td>
+                        <td>${h.diagnostico}</td>
+                        <td>${medTexto}</td>
+                        <td>${h.observaciones || 'Sin observaciones'}</td>
+                    </tr>
+                `;
+            });
+        }
+    } catch (err) {
+        console.error("Error al cargar historial:", err);
+    }
+}
+
+        document.getElementById('formHistorial').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const datos = {
+                id_paciente: document.getElementById('id_paciente').value,
+                fecha: document.getElementById('fecha').value,
+                medico_tratante: document.getElementById('medico_tratante').value,
+                especialidad_medico: document.getElementById('especialidad_medico').value,
+                motivo_visita: document.getElementById('motivo_visita').value,
+                examenes_laboratorio: document.getElementById('examenes_laboratorio').value,
+                resultados_examenes: document.getElementById('resultados_examenes').value,
+                diagnostico: document.getElementById('diagnostico').value,
+                medicamento_aplicado: document.getElementById('medicamento_aplicado').value,
+                cantidad_medicamento: document.getElementById('cantidad_medicamento').value,
+                tiempo_aplicacion: document.getElementById('tiempo_aplicacion').value,
+                observaciones: document.getElementById('observaciones').value
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/historial', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                if (res.ok) {
+                    mostrarToast('¡Ficha médica guardada en el historial!');
+                    document.getElementById('formHistorial').reset();
+                    document.getElementById('fecha').valueAsDate = new Date();
+                    cargarHistorial();
+                } else {
+                    mostrarToast('Error al guardar el registro', true);
+                }
+            } catch (err) {
+                console.error("Error en la solicitud:", err);
+                mostrarToast('Error de conexión con el servidor', true);
+            }
+        });
+    </script>
+</body>
+</html>

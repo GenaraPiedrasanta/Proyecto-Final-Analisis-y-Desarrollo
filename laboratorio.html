@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Laboratorio - Cabeza de Algodón</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body {
+            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)), 
+                        url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover; min-height: 100vh; padding: 30px 20px; display: flex; justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); width: 100%; max-width: 1100px;
+            border-radius: 16px; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { color: #0f172a; }
+        .btn { background-color: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-sec { background-color: #64748b; }
+        .btn-sec:hover { background-color: #475569; }
+        .form-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: white; font-family: inherit; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #0f172a; color: white; }
+        
+        .toast {
+            display: none; position: fixed; top: 20px; right: 20px;
+            background-color: #10b981; color: white; padding: 14px 24px;
+            border-radius: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2);
+            font-weight: 600; z-index: 1000; animation: fadeIn 0.3s ease;
+        }
+        .toast.error { background-color: #ef4444; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+    <div id="toast" class="toast"></div>
+
+    <div class="container">
+        <div class="header">
+            <h1>Módulo de Laboratorio</h1>
+            <a href="inicio.html" class="btn btn-sec">← Volver al Menú</a>
+        </div>
+
+        <div class="form-card">
+            <h3>Registrar Orden / Examen de Laboratorio</h3>
+            <form id="formLab">
+                <div class="form-grid">
+                    <div>
+                        <label>Paciente:</label>
+                        <select id="id_paciente" required>
+                            <option value="">Cargando pacientes...</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Tipo de Examen:</label>
+                        <input type="text" id="tipo_examen" required placeholder="Ej. Hemograma, Glucosa, Perfil Lipídico">
+                    </div>
+                    <div>
+                        <label>Fecha de Realización:</label>
+                        <input type="date" id="fecha" required>
+                    </div>
+                    <div>
+                        <label>Estado del Examen:</label>
+                        <select id="estado">
+                            <option value="Pendiente">Pendiente</option>
+                            <option value="En Proceso">En Proceso</option>
+                            <option value="Entregado">Entregado</option>
+                        </select>
+                    </div>
+                    <div style="grid-column: span 2;">
+                        <label>Resultado / Diagnóstico de Laboratorio:</label>
+                        <input type="text" id="resultado" placeholder="Ej. Glucosa 105 mg/dL. Dentro de rango normal.">
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 15px;">Guardar Examen</button>
+            </form>
+        </div>
+
+        <h3>Historial de Exámenes</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Paciente</th>
+                    <th>Tipo de Examen</th>
+                    <th>Resultado</th>
+                    <th>Estado</th>
+                </tr>
+            </thead>
+            <tbody id="tablaLab"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('fecha').valueAsDate = new Date();
+            cargarPacientes();
+            cargarLaboratorios();
+        });
+
+        function mostrarToast(mensaje, esError = false) {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.className = esError ? 'toast error' : 'toast';
+            toast.style.display = 'block';
+            setTimeout(() => { toast.style.display = 'none'; }, 3000);
+        }
+
+        async function cargarPacientes() {
+            try {
+                const resP = await fetch('http://localhost:3000/api/pacientes');
+                const pacientes = await resP.json();
+                const selectP = document.getElementById('id_paciente');
+                selectP.innerHTML = '<option value="">Seleccione un paciente...</option>';
+                if (Array.isArray(pacientes)) {
+                    pacientes.forEach(p => {
+                        selectP.innerHTML += `<option value="${p.id_paciente}">${p.nombre}</option>`;
+                    });
+                }
+            } catch (err) {
+                console.error('Error cargando pacientes:', err);
+            }
+        }
+
+        async function cargarLaboratorios() {
+            try {
+                const res = await fetch('http://localhost:3000/api/laboratorio');
+                const examenes = await res.json();
+                const tbody = document.getElementById('tablaLab');
+                tbody.innerHTML = '';
+
+                if (Array.isArray(examenes)) {
+                    examenes.forEach(l => {
+                        const fechaFormateada = new Date(l.fecha).toLocaleDateString('es-GT');
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${l.id_examen}</td>
+                                <td>${fechaFormateada}</td>
+                                <td><b>${l.nombre_paciente}</b></td>
+                                <td>${l.tipo_examen}</td>
+                                <td>${l.resultado || 'Pendiente de resultado'}</td>
+                                <td><span style="padding: 4px 8px; border-radius: 4px; background: #e2e8f0; font-size: 13px;">${l.estado}</span></td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar exámenes:", error);
+            }
+        }
+
+        document.getElementById('formLab').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const datos = {
+                id_paciente: document.getElementById('id_paciente').value,
+                tipo_examen: document.getElementById('tipo_examen').value,
+                fecha: document.getElementById('fecha').value,
+                resultado: document.getElementById('resultado').value,
+                estado: document.getElementById('estado').value
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/laboratorio', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                if (res.ok) {
+                    mostrarToast('¡Examen guardado correctamente!');
+                    document.getElementById('formLab').reset();
+                    document.getElementById('fecha').valueAsDate = new Date();
+                    cargarLaboratorios();
+                } else {
+                    mostrarToast('Error al guardar el examen', true);
+                }
+            } catch (error) {
+                console.error("Error en la solicitud:", error);
+                mostrarToast('Error de conexión con el servidor', true);
+            }
+        });
+    </script>
+</body>
+</html>

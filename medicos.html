@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Médicos - Cabeza de Algodón</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body {
+            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)), 
+                        url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover; min-height: 100vh; padding: 30px 20px; display: flex; justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); width: 100%; max-width: 1100px;
+            border-radius: 16px; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { color: #0f172a; }
+        .btn { background-color: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-sec { background-color: #64748b; }
+        .btn-sec:hover { background-color: #475569; }
+        .form-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 30px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        input { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #0f172a; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Gestión de Médicos</h1>
+            <a href="inicio.html" class="btn btn-sec">← Volver al Menú</a>
+        </div>
+
+        <div class="form-card">
+            <h3>Registrar Nuevo Médico</h3>
+            <form id="formMedico">
+                <div class="form-grid">
+                    <div>
+                        <label>Nombre Completo:</label>
+                        <input type="text" id="nombre" required placeholder="Ej. Dr. Juan Pérez">
+                    </div>
+                    <div>
+                        <label>Especialidad:</label>
+                        <input type="text" id="especialidad" required placeholder="Ej. Geriatría / Medicina General">
+                    </div>
+                    <div>
+                        <label>Teléfono:</label>
+                        <input type="text" id="telefono" required placeholder="Ej. 55554444">
+                    </div>
+                    <div>
+                        <label>Correo Electrónico:</label>
+                        <input type="email" id="correo" placeholder="doctor@ejemplo.com">
+                    </div>
+                    <div>
+                        <label>No. Colegiado:</label>
+                        <input type="text" id="colegiado" placeholder="Ej. 12345">
+                    </div>
+                </div>
+                <button type="submit" class="btn" style="margin-top: 15px;">Guardar Médico</button>
+            </form>
+        </div>
+
+        <h3>Listado de Médicos</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre</th>
+                    <th>Especialidad</th>
+                    <th>Teléfono</th>
+                    <th>Correo</th>
+                    <th>No. Colegiado</th>
+                </tr>
+            </thead>
+            <tbody id="tablaMedicos"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', cargarMedicos);
+
+        async function cargarMedicos() {
+            try {
+                const res = await fetch('http://localhost:3000/api/medicos');
+                const medicos = await res.json();
+                const tbody = document.getElementById('tablaMedicos');
+                tbody.innerHTML = '';
+
+                if (Array.isArray(medicos)) {
+                    medicos.forEach(m => {
+                        tbody.innerHTML += `
+                            <tr>
+                                <td>${m.id_medico}</td>
+                                <td><b>${m.nombre}</b></td>
+                                <td>${m.especialidad}</td>
+                                <td>${m.telefono}</td>
+                                <td>${m.correo || 'N/A'}</td>
+                                <td>${m.colegiado || 'N/A'}</td>
+                            </tr>
+                        `;
+                    });
+                }
+            } catch (error) {
+                console.error("Error al cargar la lista de médicos:", error);
+            }
+        }
+
+        document.getElementById('formMedico').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const datos = {
+                nombre: document.getElementById('nombre').value,
+                especialidad: document.getElementById('especialidad').value,
+                telefono: document.getElementById('telefono').value,
+                correo: document.getElementById('correo').value,
+                colegiado: document.getElementById('colegiado').value
+            };
+
+            try {
+                const res = await fetch('http://localhost:3000/api/medicos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(datos)
+                });
+
+                if (res.ok) {
+                    alert('Médico registrado correctamente');
+                    document.getElementById('formMedico').reset();
+                    cargarMedicos();
+                } else {
+                    alert('Error al registrar médico');
+                }
+            } catch (error) {
+                console.error("Error al enviar el formulario:", error);
+                alert('Error al conectar con el servidor');
+            }
+        });
+    </script>
+</body>
+</html>
