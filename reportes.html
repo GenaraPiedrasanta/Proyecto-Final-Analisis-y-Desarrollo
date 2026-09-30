@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reportes y Métricas - Cabeza de Algodón</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body {
+            background: linear-gradient(rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.75)), 
+                        url('https://images.unsplash.com/photo-1576091160399-112ba8d25d1d?auto=format&fit=crop&w=1920&q=80') no-repeat center center fixed;
+            background-size: cover; min-height: 100vh; padding: 30px 20px; display: flex; justify-content: center;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); width: 100%; max-width: 1100px;
+            border-radius: 16px; padding: 30px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+        }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        h1 { color: #0f172a; }
+        .btn { background-color: #2563eb; color: white; border: none; padding: 10px 18px; border-radius: 8px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn:hover { background-color: #1d4ed8; }
+        .btn-sec { background-color: #64748b; }
+        .btn-sec:hover { background-color: #475569; }
+        
+        /* TARJETAS DE DASHBOARD */
+        .metrics-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 15px; margin-bottom: 30px; }
+        .card-metric { background: white; padding: 20px; border-radius: 12px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
+        .card-metric h4 { color: #64748b; font-size: 14px; text-transform: uppercase; margin-bottom: 8px; }
+        .card-metric .value { font-size: 26px; font-weight: 700; color: #0f172a; }
+        .value.green { color: #16a34a; }
+        .value.red { color: #dc2626; }
+        .value.amber { color: #d97706; }
+
+        /* SECCIÓN DE FILTROS */
+        .filter-card { background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 12px; margin-bottom: 25px; }
+        .filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; align-items: end; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: white; font-family: inherit; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; background: white; border-radius: 8px; overflow: hidden; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #e2e8f0; }
+        th { background-color: #0f172a; color: white; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Módulo de Reportes</h1>
+            <a href="inicio.html" class="btn btn-sec">← Volver al Menú</a>
+        </div>
+
+        <!-- TARJETAS DE RESUMEN GLOBAL -->
+        <div class="metrics-grid">
+            <div class="card-metric">
+                <h4>Residentes Activos</h4>
+                <div class="value" id="totalPacientes">0</div>
+            </div>
+            <div class="card-metric">
+                <h4>Total Ingresos</h4>
+                <div class="value green" id="totalIngresos">Q 0.00</div>
+            </div>
+            <div class="card-metric">
+                <h4>Total Egresos</h4>
+                <div class="value red" id="totalEgresos">Q 0.00</div>
+            </div>
+            <div class="card-metric">
+                <h4>Alertas Stock Bajo</h4>
+                <div class="value amber" id="alertasStock">0</div>
+            </div>
+        </div>
+
+        <!-- FILTRADO DE REPORTES -->
+        <div class="filter-card">
+            <h3>Generar Reporte Detallado</h3>
+            <div class="filter-grid">
+                <div>
+                    <label>Tipo de Reporte:</label>
+                    <select id="tipoReporte">
+                        <option value="finanzas">Movimientos Financieros</option>
+                        <option value="laboratorio">Exámenes de Laboratorio</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Fecha Inicio:</label>
+                    <input type="date" id="fechaInicio">
+                </div>
+                <div>
+                    <label>Fecha Fin:</label>
+                    <input type="date" id="fechaFin">
+                </div>
+                <div>
+                    <button class="btn" style="width: 100%;" onclick="consultarReporte()">Consultar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- TABLA DE RESULTADOS -->
+        <h3 id="tituloTabla">Resultados del Reporte</h3>
+        <table>
+            <thead id="tablaHead">
+                <tr><th>Seleccione un rango de fechas para consultar</th></tr>
+            </thead>
+            <tbody id="tablaBody"></tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hoy = new Date();
+            const haceUnMes = new Date();
+            haceUnMes.setMonth(hoy.getMonth() - 1);
+
+            document.getElementById('fechaFin').valueAsDate = hoy;
+            document.getElementById('fechaInicio').valueAsDate = haceUnMes;
+
+            cargarResumenMetricas();
+            consultarReporte();
+        });
+
+        async function cargarResumenMetricas() {
+            try {
+                const res = await fetch('http://localhost:3000/api/reportes/resumen');
+                const data = await res.json();
+                
+                document.getElementById('totalPacientes').textContent = data.totalPacientes || 0;
+                document.getElementById('totalIngresos').textContent = `Q ${parseFloat(data.totalIngresos || 0).toFixed(2)}`;
+                document.getElementById('totalEgresos').textContent = `Q ${parseFloat(data.totalEgresos || 0).toFixed(2)}`;
+                document.getElementById('alertasStock').textContent = `${data.alertasStock || 0} meds`;
+            } catch (err) {
+                console.error("Error al cargar métricas:", err);
+            }
+        }
+
+        async function consultarReporte() {
+            const tipo = document.getElementById('tipoReporte').value;
+            const fInicio = document.getElementById('fechaInicio').value;
+            const fFin = document.getElementById('fechaFin').value;
+
+            if (!fInicio || !fFin) {
+                alert('Por favor seleccione ambas fechas.');
+                return;
+            }
+
+            try {
+                const res = await fetch(`http://localhost:3000/api/reportes/${tipo}?fecha_inicio=${fInicio}&fecha_fin=${fFin}`);
+                const datos = await res.json();
+
+                const thead = document.getElementById('tablaHead');
+                const tbody = document.getElementById('tablaBody');
+                tbody.innerHTML = '';
+
+                if (tipo === 'finanzas') {
+                    document.getElementById('tituloTabla').textContent = 'Reporte de Movimientos Financieros';
+                    thead.innerHTML = `
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Tipo</th>
+                            <th>Paciente / Entidad</th>
+                            <th>Concepto</th>
+                            <th>Método</th>
+                            <th>Monto</th>
+                        </tr>
+                    `;
+                    if (Array.isArray(datos) && datos.length > 0) {
+                        datos.forEach(f => {
+                            const fecha = new Date(f.fecha).toLocaleDateString('es-GT');
+                            const esIngreso = f.tipo === 'Ingreso';
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${f.id_transaccion}</td>
+                                    <td>${fecha}</td>
+                                    <td><b>${f.tipo}</b></td>
+                                    <td>${f.nombre_paciente}</td>
+                                    <td>${f.concepto}</td>
+                                    <td>${f.metodo_pago}</td>
+                                    <td style="font-weight: bold; color: ${esIngreso ? '#16a34a' : '#dc2626'};">
+                                        ${esIngreso ? '+' : '-'} Q ${parseFloat(f.monto).toFixed(2)}
+                                    </td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;">No se encontraron registros en el rango seleccionado.</td></tr>`;
+                    }
+                } else if (tipo === 'laboratorio') {
+                    document.getElementById('tituloTabla').textContent = 'Reporte de Exámenes de Laboratorio';
+                    thead.innerHTML = `
+                        <tr>
+                            <th>ID</th>
+                            <th>Fecha</th>
+                            <th>Paciente</th>
+                            <th>Examen</th>
+                            <th>Resultado</th>
+                            <th>Estado</th>
+                        </tr>
+                    `;
+                    if (Array.isArray(datos) && datos.length > 0) {
+                        datos.forEach(l => {
+                            const fecha = new Date(l.fecha).toLocaleDateString('es-GT');
+                            tbody.innerHTML += `
+                                <tr>
+                                    <td>${l.id_examen}</td>
+                                    <td>${fecha}</td>
+                                    <td><b>${l.nombre_paciente}</b></td>
+                                    <td>${l.tipo_examen}</td>
+                                    <td>${l.resultado || 'Sin resultado registrado'}</td>
+                                    <td>${l.estado}</td>
+                                </tr>
+                            `;
+                        });
+                    } else {
+                        tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;">No se encontraron registros en el rango seleccionado.</td></tr>`;
+                    }
+                }
+            } catch (error) {
+                console.error("Error al consultar reporte:", error);
+            }
+        }
+    </script>
+</body>
+</html>
