@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Cabeza de Algodón</title>
+    <link rel="stylesheet" href="estilos.css">
+    <!-- Iconos de FontAwesome para usuario y candado -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="login-body">
+
+    <div class="login-container">
+        <div class="login-box">
+            <h2>Bienvenido</h2>
+            <p>Inicia sesión para acceder al sistema</p>
+
+            <form id="loginForm">
+                <label for="usuario">
+                    <i class="fa-solid fa-user"></i> Usuario
+                </label>
+                <input 
+                    type="text" 
+                    id="usuario" 
+                    placeholder="Ingrese su usuario"
+                    required
+                >
+
+                <label for="password">
+                    <i class="fa-solid fa-lock"></i> Contraseña
+                </label>
+                <input 
+                    type="password" 
+                    id="password" 
+                    placeholder="Ingrese su contraseña"
+                    required
+                >
+
+                <button type="submit">Ingresar</button>
+
+                <p id="mensaje"></p>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
